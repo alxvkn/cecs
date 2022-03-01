@@ -10,10 +10,12 @@
 
 struct ecs_ctx {
     size_t entity_size;
-    unsigned int comopnents_count;
     size_t* components_sizes;
-    volatile unsigned int entities_count;
+
+    unsigned int comopnents_count; // should be constant after initalization
+
     void* entities;
+    volatile unsigned int entities_count;
 };
 
 enum ecs_err {
