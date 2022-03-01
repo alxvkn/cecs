@@ -57,6 +57,7 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
         return ECS_INVALID_ARGUMENT;
     }
 
+    memset(ctx, 0, sizeof(*ctx));
     ctx->comopnents_count = components_count;
 
     ctx->entity_size = 0;
@@ -74,12 +75,17 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
     }
     va_end(sizes);
 
+    ctx->entities = malloc(ctx->entity_size * __ECS_MAX_ENTITIES); // WARNING: temporary! then we need some prealloc amount definition
+
     return ECS_OK;
 }
 
 void ecs_cleanup(struct ecs_ctx* ctx) {
-    free(ctx->components_sizes);
-    free(ctx->entities);
+    if (ctx->components_sizes != NULL)
+        free(ctx->components_sizes);
+
+    if (ctx->entities != NULL)
+        free(ctx->entities);
 }
 
 int main() {
@@ -89,5 +95,9 @@ int main() {
         puts(ecs_get_error());
     else
         puts("looks likes succesfull ecs_init() call.");
+
+    ecs_cleanup(&ctx);
+
+    puts("no way! finishing without segfaults!");
     return 0;
 }
