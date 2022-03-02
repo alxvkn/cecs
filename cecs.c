@@ -35,6 +35,13 @@ enum ecs_err {
 // register new components
 //
 // ecs_ctx should know only components count and the sum of their sizes
+//
+// components_count in ecs_ctx will only be used to compute their masks
+// and then to query entites with specified components
+//
+// actual entity struct will be defined by user
+// it must include component_mask_t as FIRST element
+// AND all possible user defined components
 
 // we should maybe make this just a pointer later,
 // since error messages propably will only be string literals
@@ -47,7 +54,11 @@ const char* ecs_get_error() {
     return error_msg_buf;
 }
 
-enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t component0_size, ...) {
+enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t entity_size) {
+    if (entity_size == 0) {
+        ecs_set_error("ecs_init(): entity_size cannot be 0");
+        return ECS_INVALID_ARGUMENT;
+    }
     if (components_count < 1) {
         ecs_set_error("ecs_init(): There must be at least one component!");
         return ECS_INVALID_ARGUMENT;
@@ -62,14 +73,7 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
     memset(ctx, 0, sizeof(*ctx));
     ctx->comopnents_count = components_count;
 
-    ctx->entity_size = 0;
-
-    va_list sizes;
-    va_start(sizes, component0_size);
-    for (unsigned i = 0; i < components_count; i++) {
-        ctx->entity_size += va_arg(sizes, size_t);
-    }
-    va_end(sizes);
+    ctx->entity_size = entity_size;
 
     // WARNING: temporary! then we need some prealloc amount definition
     ctx->entities = calloc(__ECS_MAX_ENTITIES, ctx->entity_size);
@@ -104,7 +108,8 @@ void movement_system(struct entity* e) {
 }
 
 int main() {
-    struct ecs_ctx ctx;
+    struct ecs_ctx ctx = {0};
+    dbgh(&ctx, sizeof(ctx));
     enum ecs_err err = ecs_init(&ctx, 8, 0);
     if (err)
         puts(ecs_get_error());
