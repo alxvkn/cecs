@@ -1,2 +1,4 @@
 *.o
 cecs
+compile_commands.json
+.cache/
