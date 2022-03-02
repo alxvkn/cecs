@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <dbg.h>
+
 #define __ECS_ERROR_MSG_BUF_SIZE 128
 
 #define __ECS_MAX_COMPONENTS 8
@@ -69,7 +71,8 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
     }
     va_end(sizes);
 
-    ctx->entities = malloc(ctx->entity_size * __ECS_MAX_ENTITIES); // WARNING: temporary! then we need some prealloc amount definition
+    // WARNING: temporary! then we need some prealloc amount definition
+    ctx->entities = calloc(__ECS_MAX_ENTITIES, ctx->entity_size);
 
     return ECS_OK;
 }
