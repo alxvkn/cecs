@@ -10,7 +10,6 @@
 
 struct ecs_ctx {
     size_t entity_size;
-    size_t* components_sizes;
 
     unsigned int comopnents_count; // should be constant after initalization
 
@@ -31,10 +30,7 @@ enum ecs_err {
 // in this realization we won't be able to dynamicly
 // register new components
 //
-// maybe ecs functions/ecs ctx doesn't need to know about the components?
-// ^^^ upper idea is like uhm so aaa mm not good?
-    // since we need to query entities
-    // which have components of some type by ecs function
+// ecs_ctx should know only components count and the sum of their sizes
 
 // we should maybe make this just a pointer later,
 // since error messages propably will only be string literals
@@ -64,16 +60,10 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
 
     ctx->entity_size = 0;
 
-    ctx->components_sizes = malloc(sizeof(size_t) * components_count);
-    if (ctx->components_sizes == NULL) {
-        ecs_set_error("ecs_init(): Failed to allocate memory for array of component sizes.");
-        return ECS_ALLOC_FAILURE;
-    }
     va_list sizes;
     va_start(sizes, component0_size);
     for (unsigned i = 0; i < components_count; i++) {
-        ctx->components_sizes[i] = va_arg(sizes, size_t);
-        ctx->entity_size += ctx->components_sizes[i];
+        ctx->entity_size += va_arg(sizes, size_t);
     }
     va_end(sizes);
 
@@ -83,9 +73,6 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
 }
 
 void ecs_cleanup(struct ecs_ctx* ctx) {
-    if (ctx->components_sizes != NULL)
-        free(ctx->components_sizes);
-
     if (ctx->entities != NULL)
         free(ctx->entities);
 }
