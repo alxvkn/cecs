@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <stdint.h>
+
 #define __ECS_ERROR_MSG_BUF_SIZE 128
 
 #define __ECS_MAX_COMPONENTS 8
@@ -75,6 +77,27 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
 void ecs_cleanup(struct ecs_ctx* ctx) {
     if (ctx->entities != NULL)
         free(ctx->entities);
+}
+
+typedef uint32_t component_mask_t;
+
+struct position {
+    int x, y;
+};
+
+struct velocity {
+    int x, y;
+};
+
+struct entity {
+    component_mask_t component_mask;
+    struct position pc;
+    struct velocity vc;
+};
+
+void movement_system(struct entity* e) {
+    e->pc.x += e->vc.x;
+    e->pc.y += e->vc.y;
 }
 
 int main() {
