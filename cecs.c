@@ -12,6 +12,8 @@
 #define __ECS_MAX_COMPONENTS 8
 #define __ECS_MAX_ENTITIES 8
 
+typedef uint32_t component_mask_t;
+
 struct ecs_ctx {
     size_t entity_size;
 
@@ -86,8 +88,6 @@ void ecs_cleanup(struct ecs_ctx* ctx) {
         free(ctx->entities);
 }
 
-typedef uint32_t component_mask_t;
-
 struct position {
     int x, y;
 };
@@ -110,7 +110,7 @@ void movement_system(struct entity* e) {
 int main() {
     struct ecs_ctx ctx = {0};
     dbgh(&ctx, sizeof(ctx));
-    enum ecs_err err = ecs_init(&ctx, 8, 0);
+    enum ecs_err err = ecs_init(&ctx, 8, sizeof(struct entity));
     if (err)
         puts(ecs_get_error());
     else
