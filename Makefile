@@ -2,17 +2,36 @@ CC = clang
 
 PROJECT = cecs
 
-CFLAGS = -Idbg-macro/include
+INCLUDE_DIRS = ./dbg-macro/include
+INCLUDE_DIRS += ./include
 
-all: $(PROJECT)
+SOURCE_DIRS = ./src
 
-$(PROJECT): $(PROJECT).o
-	$(CC) $^ -o $@
+SOURCE_WILDCARDS = $(addsuffix /*.c,$(SOURCE_DIRS))
+
+CFLAGS = $(addprefix -I,$(INCLUDE_DIRS))
+
+LIB_STATIC = lib$(PROJECT).a
+
+LDLIBS = cecs
+LDFLAGS = -L.
+
+LDLIBS := $(addprefix -l,$(LDLIBS))
+
+VPATH = $(SOURCE_DIRS)
+
+all: $(LIB_STATIC)
+
+$(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(wildcard $(SOURCE_WILDCARDS))))
+	$(AR) rcs $@ $^
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $<
 
+test: test.o $(LIB_STATIC)
+	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
+
 clean:
-	rm -f $(PROJECT).o $(PROJECT)
+	$(RM) $(PROJECT).o $(PROJECT) $(LIB_STATIC) test.o test
 
 .PHONY: all clean

@@ -3,32 +3,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <stdint.h>
-
 #include <dbg.h>
+
+#include <cecs.h>
 
 #define __ECS_ERROR_MSG_BUF_SIZE 128
 
+// later something like (sizeof(component_mask_t) * CHAR_BIT)
 #define __ECS_MAX_COMPONENTS 8
+
 #define __ECS_MAX_ENTITIES 8
 
 typedef uint32_t component_mask_t;
-
-struct ecs_ctx {
-    size_t entity_size;
-
-    unsigned int comopnents_count; // should be constant after initalization
-
-    void* entities;
-    volatile unsigned int entities_count;
-};
-
-enum ecs_err {
-    ECS_OK = 0,
-    ECS_FAIL,
-    ECS_INVALID_ARGUMENT,
-    ECS_ALLOC_FAILURE,
-};
 
 // i think we should not use ctx structure directly
 // but provide functions instead
@@ -86,38 +72,4 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
 void ecs_cleanup(struct ecs_ctx* ctx) {
     if (ctx->entities != NULL)
         free(ctx->entities);
-}
-
-struct position {
-    int x, y;
-};
-
-struct velocity {
-    int x, y;
-};
-
-struct entity {
-    component_mask_t component_mask;
-    struct position pc;
-    struct velocity vc;
-};
-
-void movement_system(struct entity* e) {
-    e->pc.x += e->vc.x;
-    e->pc.y += e->vc.y;
-}
-
-int main() {
-    struct ecs_ctx ctx = {0};
-    dbgh(&ctx, sizeof(ctx));
-    enum ecs_err err = ecs_init(&ctx, 8, sizeof(struct entity));
-    if (err)
-        puts(ecs_get_error());
-    else
-        puts("looks likes succesfull ecs_init() call.");
-
-    ecs_cleanup(&ctx);
-
-    puts("no way! finishing without segfaults!");
-    return 0;
 }
