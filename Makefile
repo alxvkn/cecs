@@ -34,4 +34,8 @@ test: test.o $(LIB_STATIC)
 clean:
 	$(RM) $(PROJECT).o $(PROJECT) $(LIB_STATIC) test.o test
 
-.PHONY: all clean
+run-test: test
+	@echo
+	./test
+
+.PHONY: all clean run-test
