@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "cecs.h"
+#include <cecs.h>
 
 #include <dbg.h>
 
