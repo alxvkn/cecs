@@ -20,7 +20,7 @@ LDLIBS := $(addprefix -l,$(LDLIBS))
 
 VPATH = $(SOURCE_DIRS)
 
-all: $(LIB_STATIC)
+all: $(LIB_STATIC) test
 
 $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(wildcard $(SOURCE_WILDCARDS))))
 	$(AR) rcs $@ $^
