@@ -14,8 +14,6 @@
 
 #define __ECS_MAX_ENTITIES 8
 
-typedef uint32_t component_mask_t;
-
 // i think we should not use ctx structure directly
 // but provide functions instead
 //
