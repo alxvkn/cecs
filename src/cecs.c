@@ -14,8 +14,8 @@
 
 #define __ECS_MAX_ENTITIES 8
 
-// i think we should not use ctx structure directly
-// but provide functions instead
+// user aren't supposed to modify ctx structure directly
+// but only use documented functions
 //
 // in this realization we won't be able to dynamicly
 // register new components
