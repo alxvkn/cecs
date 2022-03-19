@@ -29,6 +29,11 @@
 // it must include component_mask_t as FIRST element
 // AND all possible user defined components
 
+// NOTE: finite-state machine
+// maybe go for state machine approach?
+// like in opengl, at least for active context
+// global static context variable and funcitons like ecs_set_ctx(struct ecs_ctx* ctx)
+
 // we should maybe make this just a pointer later,
 // since error messages propably will only be string literals
 static char error_msg_buf[__ECS_ERROR_MSG_BUF_SIZE];
