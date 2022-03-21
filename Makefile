@@ -1,5 +1,3 @@
-CC = clang
-
 PROJECT = cecs
 
 INCLUDE_DIRS = ./dbg-macro/include
