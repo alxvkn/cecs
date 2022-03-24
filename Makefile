@@ -10,9 +10,6 @@ CFLAGS = $(addprefix -I,$(INCLUDE_DIRS))
 
 LIB_STATIC = lib$(PROJECT).a
 
-LDLIBS = cecs
-LDFLAGS = -L.
-
 LDLIBS := $(addprefix -l,$(LDLIBS))
 
 VPATH = $(SOURCE_DIR)
@@ -25,14 +22,15 @@ $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
 %.o: %.c
 	$(CC) -c $(CFLAGS) $<
 
-test: test.o $(LIB_STATIC)
-	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
+test: $(LIB_STATIC)
+	$(MAKE) -C test INCLUDE_DIRS='$(addprefix ../,$(INCLUDE_DIRS))' LIB_STATIC=../$(LIB_STATIC)
 
 clean:
-	$(RM) $(PROJECT).o $(PROJECT) $(LIB_STATIC) test.o test
+	$(RM) $(PROJECT).o $(LIB_STATIC)
+	$(MAKE) -C test clean
 
 run-test: test
 	@echo
-	./test
+	./test/test
 
-.PHONY: all clean run-test
+.PHONY: all clean run-test test
