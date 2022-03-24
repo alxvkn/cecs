@@ -3,9 +3,8 @@ PROJECT = cecs
 INCLUDE_DIRS = ./dbg-macro/include
 INCLUDE_DIRS += ./include
 
-SOURCE_DIRS = ./src
-
-SOURCE_WILDCARDS = $(addsuffix /*.c,$(SOURCE_DIRS))
+SOURCE_DIR = ./src
+SOURCE = $(wildcard $(SOURCE_DIR)/*.c)
 
 CFLAGS = $(addprefix -I,$(INCLUDE_DIRS))
 
@@ -16,11 +15,11 @@ LDFLAGS = -L.
 
 LDLIBS := $(addprefix -l,$(LDLIBS))
 
-VPATH = $(SOURCE_DIRS)
+VPATH = $(SOURCE_DIR)
 
 all: $(LIB_STATIC) test
 
-$(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(wildcard $(SOURCE_WILDCARDS))))
+$(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
 	$(AR) rcs $@ $^
 
 %.o: %.c
