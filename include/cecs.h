@@ -21,6 +21,10 @@ enum ecs_err {
     ECS_ALLOC_FAILURE,
 };
 
+void ecs_set_ctx(struct ecs_ctx* ctx);
+
+struct ecs_ctx* ecs_get_ctx();
+
 const char* ecs_get_error();
 
 enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t entity_size);

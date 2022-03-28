@@ -7,7 +7,7 @@
 
 #include <cecs.h>
 
-#define __ECS_ERROR_MSG_BUF_SIZE 128
+#define __ECS_ERROR_MSG_BUF_SIZE 256
 
 // later something like (sizeof(component_mask_t) * CHAR_BIT)
 #define __ECS_MAX_COMPONENTS 8
@@ -29,11 +29,6 @@
 // it must include component_mask_t as FIRST element
 // AND all possible user defined components
 
-// NOTE: finite-state machine
-// maybe go for state machine approach?
-// like in opengl, at least for active context
-// global static context variable and funcitons like ecs_set_ctx(struct ecs_ctx* ctx)
-
 // we should maybe make this just a pointer later,
 // since error messages propably will only be string literals
 static char error_msg_buf[__ECS_ERROR_MSG_BUF_SIZE];
@@ -45,29 +40,39 @@ const char* ecs_get_error() {
     return error_msg_buf;
 }
 
+struct ecs_ctx* current_ctx = {0};
+
+void ecs_set_ctx(struct ecs_ctx* ctx) {
+    current_ctx = ctx;
+}
+
+struct ecs_ctx* ecs_get_ctx() {
+    return current_ctx;
+}
+
 enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t entity_size) {
-    if (entity_size == 0) {
+    if (dbg(entity_size) == 0) {
         ecs_set_error("ecs_init(): entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
     }
-    if (components_count < 1) {
+    if (dbg(components_count) < 1) {
         ecs_set_error("ecs_init(): There must be at least one component!");
         return ECS_INVALID_ARGUMENT;
     }
     if (components_count > __ECS_MAX_COMPONENTS) {
-        char errmsg[256] = "ecs_init(): Requested components_count (%d) cannot be satisfied with current ecs settings. __ECS_MAX_COMPONENTS (%d) macro defined in " __FILE__;
+        char errmsg[__ECS_ERROR_MSG_BUF_SIZE] = "ecs_init(): Requested components_count (%d) cannot be satisfied with current ecs settings. __ECS_MAX_COMPONENTS (%d) macro defined in " __FILE__;
         sprintf(errmsg, errmsg, components_count, __ECS_MAX_COMPONENTS);
         ecs_set_error(errmsg);
         return ECS_INVALID_ARGUMENT;
     }
 
-    memset(ctx, 0, sizeof(*ctx));
+    memset(dbg(ctx), 0, sizeof(*ctx));
     ctx->comopnents_count = components_count;
 
     ctx->entity_size = entity_size;
 
     // WARNING: temporary! then we need some prealloc amount definition
-    ctx->entities = calloc(__ECS_MAX_ENTITIES, ctx->entity_size);
+    ctx->entities = calloc(__ECS_MAX_ENTITIES, entity_size);
 
     return ECS_OK;
 }
