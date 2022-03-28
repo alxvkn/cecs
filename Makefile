@@ -16,13 +16,16 @@ VPATH = $(SOURCE_DIR)
 
 all: $(LIB_STATIC) test
 
+debug: CFLAGS += -g
+debug: $(LIB_STATIC)
+
 $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
 	$(AR) rcs $@ $^
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $<
 
-test: $(LIB_STATIC)
+test: debug
 	$(MAKE) -C test INCLUDE_DIRS='$(addprefix ../,$(INCLUDE_DIRS))' LIB_STATIC=../$(LIB_STATIC)
 
 clean:
