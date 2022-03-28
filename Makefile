@@ -2,11 +2,13 @@ PROJECT = cecs
 
 INCLUDE_DIRS = ./dbg-macro/include
 INCLUDE_DIRS += ./include
+INCLUDE_DIRS += ./src
 
 SOURCE_DIR = ./src
 SOURCE = $(wildcard $(SOURCE_DIR)/*.c)
 
 CFLAGS = $(addprefix -I,$(INCLUDE_DIRS))
+DEBUG_FLAGS = -g
 
 LIB_STATIC = lib$(PROJECT).a
 
@@ -16,7 +18,7 @@ VPATH = $(SOURCE_DIR)
 
 all: $(LIB_STATIC) test
 
-debug: CFLAGS += -g
+debug: CFLAGS += DEBUG_FLAGS
 debug: $(LIB_STATIC)
 
 $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
@@ -26,7 +28,7 @@ $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
 	$(CC) -c $(CFLAGS) $<
 
 test: debug
-	$(MAKE) -C test INCLUDE_DIRS='$(addprefix ../,$(INCLUDE_DIRS))' LIB_STATIC=../$(LIB_STATIC)
+	CFLAGS='$(DEBUG_FLAGS)' $(MAKE) -C test INCLUDE_DIRS='$(addprefix ../,$(INCLUDE_DIRS))' LIB_STATIC=../$(LIB_STATIC)
 
 clean:
 	$(RM) $(PROJECT).o $(LIB_STATIC)
