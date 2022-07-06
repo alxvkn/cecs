@@ -5,6 +5,13 @@
 
 typedef uint32_t component_mask_t;
 
+enum ecs_err {
+    ECS_OK = 0,
+    ECS_FAIL,
+    ECS_INVALID_ARGUMENT,
+    ECS_ALLOC_FAILURE,
+};
+
 struct ecs_ctx {
     unsigned int components_count; // should be constant after initalization
 
@@ -13,13 +20,6 @@ struct ecs_ctx {
         void* array;
         volatile unsigned int count;
     } entities;
-};
-
-enum ecs_err {
-    ECS_OK = 0,
-    ECS_FAIL,
-    ECS_INVALID_ARGUMENT,
-    ECS_ALLOC_FAILURE,
 };
 
 // Context initilization/desctruction
