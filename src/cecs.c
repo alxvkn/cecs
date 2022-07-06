@@ -40,6 +40,9 @@ const char* ecs_get_error() {
     return error_msg_buf;
 }
 
+// not static because after code splitting into different files we should be able to
+// extern struct ecs_ctx* current_ctx;
+// which (i guess) will be more optimal then calling ecs_get_ctx()
 struct ecs_ctx* current_ctx = {0};
 
 void ecs_set_ctx(struct ecs_ctx* ctx) {
@@ -67,11 +70,11 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t
     }
 
     memset(dbg(ctx), 0, sizeof(*ctx));
-    ctx->comopnents_count = components_count;
+    ctx->components_count = components_count;
 
     ctx->entity_size = entity_size;
 
-    // WARNING: temporary! then we need some prealloc amount definition
+    // TODO: temporary! then we need some prealloc amount definition
     ctx->entities = calloc(__ECS_MAX_ENTITIES, entity_size);
 
     return ECS_OK;

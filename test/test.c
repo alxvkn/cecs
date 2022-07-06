@@ -5,6 +5,8 @@
 
 #include <dbg.h>
 
+// COMPONENTS
+
 struct position {
     int x, y;
 };
@@ -13,11 +15,15 @@ struct velocity {
     int x, y;
 };
 
+// THE ENTITY STRUCT
+
 struct entity {
     component_mask_t component_mask;
     struct position pc;
     struct velocity vc;
 };
+
+// SYSTEMS
 
 void movement_system(struct entity* e) {
     e->pc.x += e->vc.x;
