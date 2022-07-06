@@ -72,15 +72,15 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
     memset(dbg(ctx), 0, sizeof(*ctx));
     ctx->components_count = config->components_count;
 
-    ctx->entity_size = config->entity_size;
+    ctx->entities.size = config->entity_size;
 
     // TODO: temporary! then we need some prealloc amount definition
-    ctx->entities = calloc(__ECS_MAX_ENTITIES, config->entity_size);
+    ctx->entities.array = calloc(__ECS_MAX_ENTITIES, config->entity_size);
 
     return ECS_OK;
 }
 
 void ecs_cleanup(struct ecs_ctx* ctx) {
-    if (ctx->entities != NULL)
-        free(ctx->entities);
+    if (ctx->entities.array != NULL)
+        free(ctx->entities.array);
 }

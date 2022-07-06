@@ -6,12 +6,13 @@
 typedef uint32_t component_mask_t;
 
 struct ecs_ctx {
-    size_t entity_size;
-
     unsigned int components_count; // should be constant after initalization
 
-    void* entities;
-    volatile unsigned int entities_count;
+    struct {
+        size_t size;
+        void* array;
+        volatile unsigned int count;
+    } entities;
 };
 
 enum ecs_err {
