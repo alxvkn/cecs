@@ -33,7 +33,13 @@ void movement_system(struct entity* e) {
 int main() {
     struct ecs_ctx ctx = {0};
     dbgh(&ctx, sizeof(ctx));
-    enum ecs_err err = ecs_init(&ctx, 8, sizeof(struct entity));
+
+    enum ecs_err err = ecs_init(&ctx,
+        &(struct ecs_config) {
+            .components_count = 8,
+            .entity_size = sizeof(struct entity),
+        });
+
     if (err)
         puts(ecs_get_error());
     else

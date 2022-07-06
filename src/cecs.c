@@ -53,29 +53,29 @@ struct ecs_ctx* ecs_get_ctx() {
     return current_ctx;
 }
 
-enum ecs_err ecs_init(struct ecs_ctx* ctx, unsigned int components_count, size_t entity_size) {
-    if (dbg(entity_size) == 0) {
+enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
+    if (dbg(config->entity_size) == 0) {
         ecs_set_error("ecs_init(): entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
     }
-    if (dbg(components_count) < 1) {
+    if (dbg(config->components_count) < 1) {
         ecs_set_error("ecs_init(): There must be at least one component!");
         return ECS_INVALID_ARGUMENT;
     }
-    if (components_count > __ECS_MAX_COMPONENTS) {
+    if (config->components_count > __ECS_MAX_COMPONENTS) {
         char errmsg[__ECS_ERROR_MSG_BUF_SIZE] = "ecs_init(): Requested components_count (%d) cannot be satisfied with current ecs settings. __ECS_MAX_COMPONENTS (%d) macro defined in " __FILE__;
-        sprintf(errmsg, errmsg, components_count, __ECS_MAX_COMPONENTS);
+        sprintf(errmsg, errmsg, config->components_count, __ECS_MAX_COMPONENTS);
         ecs_set_error(errmsg);
         return ECS_INVALID_ARGUMENT;
     }
 
     memset(dbg(ctx), 0, sizeof(*ctx));
-    ctx->components_count = components_count;
+    ctx->components_count = config->components_count;
 
-    ctx->entity_size = entity_size;
+    ctx->entity_size = config->entity_size;
 
     // TODO: temporary! then we need some prealloc amount definition
-    ctx->entities = calloc(__ECS_MAX_ENTITIES, entity_size);
+    ctx->entities = calloc(__ECS_MAX_ENTITIES, config->entity_size);
 
     return ECS_OK;
 }
