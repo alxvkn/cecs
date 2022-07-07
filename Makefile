@@ -16,9 +16,9 @@ LDLIBS := $(addprefix -l,$(LDLIBS))
 
 VPATH = $(SOURCE_DIR)
 
-all: $(LIB_STATIC) test
+all: test
 
-debug: CFLAGS += DEBUG_FLAGS
+debug: CFLAGS += $(DEBUG_FLAGS)
 debug: $(LIB_STATIC)
 
 $(LIB_STATIC): $(notdir $(patsubst %.c,%.o,$(SOURCE)))
