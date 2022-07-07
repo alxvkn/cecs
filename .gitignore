@@ -1,5 +1,5 @@
 *.o
 *.a
-./test/test
+test/test
 compile_commands.json
 .cache/
