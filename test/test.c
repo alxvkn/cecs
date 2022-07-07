@@ -3,7 +3,7 @@
 
 #include <cecs.h>
 
-#include <dbg.h>
+#include <stdio.h>
 
 // COMPONENTS
 
@@ -32,7 +32,6 @@ void movement_system(struct entity* e) {
 
 int main() {
     struct ecs_ctx ctx = {0};
-    dbgh(&ctx, sizeof(ctx));
 
     enum ecs_err err = ecs_init(&ctx,
         &(struct ecs_config) {

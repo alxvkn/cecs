@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <dbg.h>
-
 #include <cecs.h>
 
 #define __ECS_ERROR_MSG_BUF_SIZE 256
@@ -54,11 +52,11 @@ struct ecs_ctx* ecs_get_ctx() {
 }
 
 enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
-    if (dbg(config->entity_size) == 0) {
+    if (config->entity_size == 0) {
         ecs_set_error("ecs_init(): entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
     }
-    if (dbg(config->components_count) < 1) {
+    if (config->components_count < 1) {
         ecs_set_error("ecs_init(): There must be at least one component!");
         return ECS_INVALID_ARGUMENT;
     }
@@ -69,7 +67,7 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
         return ECS_INVALID_ARGUMENT;
     }
 
-    memset(dbg(ctx), 0, sizeof(*ctx));
+    memset(ctx, 0, sizeof(*ctx));
     ctx->components_count = config->components_count;
 
     ctx->entities.size = config->entity_size;

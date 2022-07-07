@@ -5,6 +5,8 @@
 
 typedef uint32_t component_mask_t;
 
+#define __ECS_MAX_SYSTEMS 8
+
 enum ecs_err {
     ECS_OK = 0,
     ECS_FAIL,
@@ -20,6 +22,11 @@ struct ecs_ctx {
         void* array;
         volatile unsigned int count;
     } entities;
+
+    struct {
+        unsigned int count;
+        void (*pointers[__ECS_MAX_SYSTEMS])(void* entity);
+    } systems;
 };
 
 // Context initilization/desctruction
