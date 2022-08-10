@@ -2,7 +2,6 @@ PROJECT = cecs
 
 INCLUDE_DIRS = ./dbg-macro/include
 INCLUDE_DIRS += ./include
-INCLUDE_DIRS += ./src
 
 SOURCE_DIR = ./src
 SOURCE = $(wildcard $(SOURCE_DIR)/*.c)
