@@ -33,6 +33,15 @@ static char error_msg_buf[__ECS_ERROR_MSG_BUF_SIZE];
 static void ecs_set_error(const char* message) {
     strcpy(error_msg_buf, message);
 }
+static inline void _ecs_set_error(const char* file_and_line, const char* func, const char* message) {
+    ecs_set_error(file_and_line);
+    strcat(error_msg_buf, func);
+    strcat(error_msg_buf, message);
+}
+
+#define __ECS_SET_ERROR_HELPER(file, line, func, error) _ecs_set_error("CECS error: "file ":" #line " ", func, "(): " error)
+#define __ECS_SET_ERROR_LINE_HELPER(file, line, func, error) __ECS_SET_ERROR_HELPER(file, line, func, error)
+#define ECS_SET_ERROR(ERROR) __ECS_SET_ERROR_LINE_HELPER(__FILE__, __LINE__, __func__, ERROR)
 
 const char* ecs_get_error() {
     return error_msg_buf;
