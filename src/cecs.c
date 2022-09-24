@@ -50,6 +50,7 @@ const char* ecs_get_error() {
 // not static because after code splitting into different files we should be able to
 // extern struct ecs_ctx* current_ctx;
 // which (i guess) will be more optimal then calling ecs_get_ctx()
+// ^^^^ that's not to think about threads :(
 struct ecs_ctx* current_ctx = {0};
 
 void ecs_set_ctx(struct ecs_ctx* ctx) {
@@ -61,6 +62,7 @@ struct ecs_ctx* ecs_get_ctx() {
 }
 
 enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
+    // invalid config parameters checking
     if (config->entity_size == 0) {
         ecs_set_error("ecs_init(): entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
@@ -76,6 +78,7 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
         return ECS_INVALID_ARGUMENT;
     }
 
+    // all parameters are fine, actual initialization
     memset(ctx, 0, sizeof(*ctx));
     ctx->components_count = config->components_count;
 
