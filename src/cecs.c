@@ -42,6 +42,9 @@ static inline void _ecs_set_error(const char* file_and_line, const char* func, c
 #define __ECS_SET_ERROR_HELPER(file, line, func, error) _ecs_set_error("CECS error: "file ":" #line " ", func, "(): " error)
 #define __ECS_SET_ERROR_LINE_HELPER(file, line, func, error) __ECS_SET_ERROR_HELPER(file, line, func, error)
 #define ECS_SET_ERROR(ERROR) __ECS_SET_ERROR_LINE_HELPER(__FILE__, __LINE__, __func__, ERROR)
+// i think this system with macros and buffer for errors
+// is not flexible and any good at all, but at this i don't know
+// what else to do so i'll stay with it
 
 const char* ecs_get_error() {
     return error_msg_buf;
@@ -64,11 +67,11 @@ struct ecs_ctx* ecs_get_ctx() {
 enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
     // invalid config parameters checking
     if (config->entity_size == 0) {
-        ecs_set_error("ecs_init(): entity_size cannot be 0");
+        ECS_SET_ERROR("entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
     }
     if (config->components_count < 1) {
-        ecs_set_error("ecs_init(): There must be at least one component!");
+        ECS_SET_ERROR("There must be at least one component!");
         return ECS_INVALID_ARGUMENT;
     }
     if (config->components_count > __ECS_MAX_COMPONENTS) {
