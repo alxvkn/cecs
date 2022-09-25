@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef uint32_t component_mask_t;
+typedef uint32_t ecs_component_mask_t;
+typedef uint32_t ecs_id_t; // generic id type, will be used for systems
 
 #define __ECS_MAX_SYSTEMS 8
 

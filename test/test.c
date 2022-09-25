@@ -18,7 +18,7 @@ struct velocity {
 // THE ENTITY STRUCT
 
 struct entity {
-    component_mask_t component_mask;
+    ecs_component_mask_t component_mask;
     struct position pc;
     struct velocity vc;
 };
