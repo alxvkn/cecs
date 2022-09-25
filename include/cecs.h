@@ -15,6 +15,12 @@ enum ecs_err {
     ECS_ALLOC_FAILURE,
 };
 
+struct ecs_system {
+    ecs_id_t id;
+
+    void (*function)(void* entity);
+};
+
 struct ecs_ctx {
     unsigned int components_count; // should be constant after initalization
 
@@ -26,7 +32,9 @@ struct ecs_ctx {
 
     struct {
         unsigned int count;
-        void (*pointers[__ECS_MAX_SYSTEMS])(void* entity);
+        struct ecs_system array[__ECS_MAX_SYSTEMS];
+        // since we know size of system struct is known at compile time,
+        // we just statically allocate space for maximum possible amount
     } systems;
 };
 
