@@ -1,6 +1,5 @@
 PROJECT = cecs
 
-INCLUDE_DIRS = ./dbg-macro/include
 INCLUDE_DIRS += ./include
 
 SOURCE_DIR = ./src
