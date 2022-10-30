@@ -1,6 +1,7 @@
 PROJECT = cecs
 
-INCLUDE_DIRS += ./include
+INCLUDE_DIRS += ./include # public
+INCLUDE_DIRS += ./src/include # internal
 
 SOURCE_DIR = ./src
 SOURCE = $(wildcard $(SOURCE_DIR)/*.c)

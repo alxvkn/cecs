@@ -4,8 +4,7 @@
 #include <stdlib.h>
 
 #include <cecs.h>
-
-#define __ECS_ERROR_MSG_BUF_SIZE 256
+#include <error.h>
 
 // later something like (sizeof(component_mask_t) * CHAR_BIT)
 #define __ECS_MAX_COMPONENTS 8
@@ -26,29 +25,6 @@
 // actual entity struct will be defined by user
 // it must include component_mask_t as FIRST element
 // AND all possible user defined components
-
-// we should maybe make this just a pointer later,
-// since error messages propably will only be string literals
-static char error_msg_buf[__ECS_ERROR_MSG_BUF_SIZE];
-static void ecs_set_error(const char* message) {
-    strcpy(error_msg_buf, message);
-}
-static inline void _ecs_set_error(const char* file_and_line, const char* func, const char* message) {
-    ecs_set_error(file_and_line);
-    strcat(error_msg_buf, func);
-    strcat(error_msg_buf, message);
-}
-
-#define __ECS_SET_ERROR_HELPER(file, line, func, error) _ecs_set_error("CECS error: "file ":" #line " ", func, "(): " error)
-#define __ECS_SET_ERROR_LINE_HELPER(file, line, func, error) __ECS_SET_ERROR_HELPER(file, line, func, error)
-#define ECS_SET_ERROR(ERROR) __ECS_SET_ERROR_LINE_HELPER(__FILE__, __LINE__, __func__, ERROR)
-// i think this system with macros and buffer for errors
-// is not flexible and any good at all, but at this i don't know
-// what else to do so i'll stay with it
-
-const char* ecs_get_error() {
-    return error_msg_buf;
-}
 
 // not static because after code splitting into different files we should be able to
 // extern struct ecs_ctx* current_ctx;
