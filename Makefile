@@ -30,7 +30,7 @@ test: debug
 	CFLAGS='$(DEBUG_FLAGS)' $(MAKE) -C test INCLUDE_DIRS='$(addprefix ../,$(INCLUDE_DIRS))' LIB_STATIC=../$(LIB_STATIC)
 
 clean:
-	$(RM) $(PROJECT).o $(LIB_STATIC)
+	$(RM) $(notdir $(patsubst %.c,%.o,$(SOURCE))) $(LIB_STATIC)
 	$(MAKE) -C test clean
 
 run-test: test
