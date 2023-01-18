@@ -40,8 +40,8 @@ struct ecs_ctx* ecs_get_ctx() {
     return current_ctx;
 }
 
-enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
-    // invalid config parameters checking
+enum ecs_err ecs_config_validate(const struct ecs_config* config) {
+    // compare values to defined maximums
     if (config->entity_size == 0) {
         ECS_SET_ERROR("entity_size cannot be 0");
         return ECS_INVALID_ARGUMENT;
@@ -56,6 +56,14 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
         ecs_set_error(errmsg);
         return ECS_INVALID_ARGUMENT;
     }
+
+    return ECS_OK;
+}
+
+enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
+    // invalid config parameters checking
+    enum ecs_err err = ecs_config_validate(config);
+    if (err) return err;
 
     // all parameters are fine, actual initialization
     memset(ctx, 0, sizeof(*ctx));
