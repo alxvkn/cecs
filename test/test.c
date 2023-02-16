@@ -42,7 +42,7 @@ int main() {
     if (err)
         puts(ecs_get_error());
     else
-        puts("looks likes succesfull ecs_init() call.");
+        puts("looks like succesfull ecs_init() call.");
 
     ecs_cleanup(&ctx);
 
