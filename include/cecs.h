@@ -6,8 +6,6 @@
 typedef uint32_t ecs_component_mask_t;
 typedef uint32_t ecs_id_t; // generic id type, will be used for systems
 
-#define __ECS_MAX_SYSTEMS 8
-
 enum ecs_err {
     ECS_OK = 0,
     ECS_FAIL,
@@ -22,7 +20,7 @@ struct ecs_system {
 };
 
 struct ecs_ctx {
-    unsigned int components_count; // should be constant after initalization
+    unsigned int components_count;
 
     struct {
         size_t size;
@@ -32,9 +30,7 @@ struct ecs_ctx {
 
     struct {
         unsigned int count;
-        struct ecs_system array[__ECS_MAX_SYSTEMS];
-        // since we know size of system struct is known at compile time,
-        // we just statically allocate space for maximum possible amount
+        struct ecs_system* array;
     } systems;
 };
 
