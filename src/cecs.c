@@ -26,20 +26,6 @@
 // it must include component_mask_t as FIRST element
 // AND all possible user defined components
 
-// not static because after code splitting into different files we should be able to
-// extern struct ecs_ctx* current_ctx;
-// which (i guess) will be more optimal then calling ecs_get_ctx()
-// ^^^^ that's not to think about threads :(
-struct ecs_ctx* current_ctx = {0};
-
-void ecs_set_ctx(struct ecs_ctx* ctx) {
-    current_ctx = ctx;
-}
-
-struct ecs_ctx* ecs_get_ctx() {
-    return current_ctx;
-}
-
 enum ecs_err ecs_config_validate(const struct ecs_config* config) {
     // compare values to defined maximums
     if (config->entity_size == 0) {
