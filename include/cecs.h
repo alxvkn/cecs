@@ -47,8 +47,4 @@ struct ecs_config {
 enum ecs_err    ecs_init(struct ecs_ctx* ctx, struct ecs_config* config);
 void            ecs_cleanup(struct ecs_ctx* ctx);
 
-// Active context {get,set}ter
-void            ecs_set_ctx(struct ecs_ctx* ctx);
-struct ecs_ctx* ecs_get_ctx();
-
 const char*     ecs_get_error();
