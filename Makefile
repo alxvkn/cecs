@@ -7,7 +7,7 @@ SOURCE_DIR = ./src
 SOURCE = $(wildcard $(SOURCE_DIR)/*.c)
 
 CFLAGS = $(addprefix -I,$(INCLUDE_PRIVATE) $(INCLUDE_PUBLIC))
-DEBUG_FLAGS = -g
+DEBUG_FLAGS = -g -DDEBUG=1
 
 LIB_STATIC = lib$(PROJECT).a
 
