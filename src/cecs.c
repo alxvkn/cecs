@@ -13,15 +13,17 @@
 // register new components
 
 enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
-    // all parameters are fine, actual initialization
     memset(ctx, 0, sizeof(*ctx));
 
     ctx->config = *config;
-    ctx->entities = calloc(config->entities_pool_size, sizeof(struct ecs_entity));
+    ctx->entities = calloc(config->entities_pool_size + 1, sizeof(struct ecs_entity));
+    memset(ctx->entities, 0, (config->entities_pool_size + 1) * sizeof(struct ecs_entity));
 
-    ctx->systems = calloc(config->systems_pool_size, sizeof(struct ecs_system));
+    ctx->systems = calloc(config->systems_pool_size + 1, sizeof(struct ecs_system));
+    memset(ctx->systems, 0, (config->systems_pool_size + 1) * sizeof(struct ecs_system));
 
     ctx->components.pools = calloc(config->components_pool_pool_size, sizeof(struct ecs_component_pool));
+    memset(ctx->components.pools, 0, config->components_pool_pool_size * sizeof(struct ecs_component_pool));
 
     return ECS_OK;
 }
@@ -38,19 +40,21 @@ void ecs_cleanup(struct ecs_ctx* ctx) {
 }
 
 size_t ecs_get_free_system_id(struct ecs_ctx* ctx) {
-    for (size_t i = 1; i < ctx->config.systems_pool_size; i++) {
+    for (size_t i = 1; i <= ctx->config.systems_pool_size; i++) {
         // systems that don't depend on components considered invalid
-        if (ctx->systems[i].component_mask == 0)
+        if (ctx->systems[i].component_mask == 0) {
+            DBGMSG("%s: found free system id (%d), returning\n", __func__, i);
             return i;
+        }
     }
     return 0;
 }
 
 size_t ecs_register_system(struct ecs_ctx* ctx, struct ecs_system* system) {
-    DBGMSG("okay in here %s\n", __func__);
 
     size_t id = ecs_get_free_system_id(ctx);
     if (id > 0) {
+        DBGMSG("%s: registering system\n", __func__);
         ctx->systems[id] = *system;
     }
 
@@ -63,7 +67,7 @@ void ecs_remove_system(struct ecs_ctx* ctx, size_t id) {
 
 size_t ecs_get_free_entity_id(struct ecs_ctx* ctx) {
     // not using 0'th index so we can treat 0 as an error
-    for (size_t i = 1; i < ctx->config.entities_pool_size; i++) {
+    for (size_t i = 1; i <= ctx->config.entities_pool_size; i++) {
         // entities with no components considered invalid
         if (ctx->entities[i].component_mask == 0)
             return i;
@@ -141,11 +145,11 @@ void ecs_remove_entity(struct ecs_ctx* ctx, size_t id) {
 }
 
 enum ecs_err ecs_run(struct ecs_ctx *ctx) {
-    for (size_t system_id = 1; system_id < ctx->config.systems_pool_size; system_id++) {
+    for (size_t system_id = 1; system_id <= ctx->config.systems_pool_size; system_id++) {
         // invalid system
         if (ctx->entities[system_id].component_mask == 0) continue;
 
-        for (size_t entity_id = 1; entity_id < ctx->config.entities_pool_size; system_id++) {
+        for (size_t entity_id = 1; entity_id <= ctx->config.entities_pool_size; entity_id++) {
             // invalid entity
             if (ctx->entities[entity_id].component_mask == 0) continue;
 

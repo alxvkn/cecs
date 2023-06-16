@@ -23,7 +23,7 @@ void movement_system(struct ecs_ctx* ctx, size_t entity_id) {
     struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
     struct velocity* v = (struct velocity*)ecs_get_component(ctx, velocity_mask, entity_id);
 
-    printf("movement_system ran with p = {\n\tx = %d\n\ty = %d\n} and v = {\n\tx = %d\n\ty = %d\n}",
+    printf("movement_system called with p = {\n\tx = %d\n\ty = %d\n} and v = {\n\tx = %d\n\ty = %d\n}\n",
            p->x, p->y, v->x, v->y);
     // I FUCKING HATE MYSELF I CAN'T DO SHIT I CAN'T DO NOTHING EVEN SHE HATES ME
 
@@ -56,8 +56,6 @@ int main() {
 
     ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e0))->x = 1;
 
-    ecs_run(&ctx);
-    ecs_run(&ctx);
     ecs_run(&ctx);
     ecs_run(&ctx);
 
