@@ -80,3 +80,10 @@ size_t          ecs_add_entity(struct ecs_ctx* ctx, ecs_component_mask_t compone
 enum ecs_err    ecs_run(struct ecs_ctx* ctx);
 
 void*           ecs_get_component(struct ecs_ctx* ctx, ecs_component_mask_t mask, size_t id);
+
+#define ECS_DEFINE_SYSTEM(name, mask) \
+void name##_system(struct ecs_ctx* ctx, size_t entity_id); /* hack to leave implementation at the end of macro */ \
+struct ecs_system name = (struct ecs_system){ \
+    .function = name##_system, \
+    .component_mask = mask }; \
+void name##_system(struct ecs_ctx* ctx, size_t entity_id)
