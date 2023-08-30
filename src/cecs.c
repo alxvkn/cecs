@@ -43,7 +43,7 @@ size_t ecs_get_free_system_id(struct ecs_ctx* ctx) {
     for (size_t i = 1; i <= ctx->config.systems_pool_size; i++) {
         // systems that don't depend on components considered invalid
         if (ctx->systems[i].component_mask == 0) {
-            DBGMSG("%s: found free system id (%d), returning\n", __func__, i);
+            DBGMSG("%s: found free system id (%lu), returning\n", __func__, i);
             return i;
         }
     }
