@@ -23,7 +23,11 @@ ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
     struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
     struct velocity* v = (struct velocity*)ecs_get_component(ctx, velocity_mask, entity_id);
 
-    printf("movement_system called with p = {\n\tx = %d\n\ty = %d\n} and v = {\n\tx = %d\n\ty = %d\n}\n",
+    printf("movement_system called with p = {\n"
+           "    x = %d\n\ty = %d\n"
+           "} and v = {\n"
+           "    x = %d\n\ty = %d\n"
+           "}\n",
            p->x, p->y, v->x, v->y);
 
     p->x += v->x;
