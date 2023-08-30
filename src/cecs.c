@@ -42,6 +42,10 @@ void ecs_cleanup(struct ecs_ctx* ctx) {
 size_t ecs_get_free_system_id(struct ecs_ctx* ctx) {
     for (size_t i = 1; i <= ctx->config.systems_pool_size; i++) {
         // systems that don't depend on components considered invalid
+        // NOTE: test/test.c:44
+        // maybe check the function pointer instead
+        // or implement more complex options for when to run the system
+        // (once every frame; on every single entity (y would u need smth like this tho?))
         if (ctx->systems[i].component_mask == 0) {
             DBGMSG("%s: found free system id (%lu), returning\n", __func__, i);
             return i;

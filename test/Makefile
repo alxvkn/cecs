@@ -3,10 +3,11 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCE))
 
 CFLAGS += $(addprefix -I,$(INCLUDE_DIRS))
 
-LDLIBS = $(LIB_STATIC)
+LDLIBS = SDL2
+LDFLAGS += $(addprefix -l,$(LDLIBS))
 
 test: $(OBJECTS)
-	$(CC) $(OBJECTS) $(LDFLAGS) $(LDLIBS) -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) $(LIB_STATIC) -o $@
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $<
