@@ -147,7 +147,7 @@ void ecs_remove_entity(struct ecs_ctx* ctx, size_t id) {
 enum ecs_err ecs_run(struct ecs_ctx *ctx) {
     for (size_t system_id = 1; system_id <= ctx->config.systems_pool_size; system_id++) {
         // invalid system
-        if (ctx->entities[system_id].component_mask == 0) continue;
+        if (ctx->systems[system_id].component_mask == 0) continue;
 
         for (size_t entity_id = 1; entity_id <= ctx->config.entities_pool_size; entity_id++) {
             // invalid entity
