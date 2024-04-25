@@ -1,4 +1,4 @@
-#include <stdarg.h>
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -149,6 +149,16 @@ void ecs_remove_entity(struct ecs_ctx* ctx, size_t id) {
 }
 
 enum ecs_err ecs_run(struct ecs_ctx *ctx) {
+    struct timespec current_time;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
+
+    double delta_time = (double)(current_time.tv_sec - ctx->last_run_time.tv_sec)
+        + (double)((current_time.tv_nsec - ctx->last_run_time.tv_nsec) / 1000)
+        / 1000 / 1000;
+    printf("ecs_run: calculated delta_time is %f\n", delta_time);
+
+    ctx->last_run_time = current_time;
+
     for (size_t system_id = 1; system_id <= ctx->config.systems_pool_size; system_id++) {
         // invalid system
         if (ctx->systems[system_id].component_mask == 0) continue;
@@ -158,7 +168,7 @@ enum ecs_err ecs_run(struct ecs_ctx *ctx) {
             if (ctx->entities[entity_id].component_mask == 0) continue;
 
             if (ctx->systems[system_id].component_mask & ctx->entities[entity_id].component_mask) {
-                ctx->systems[system_id].function(ctx, entity_id);
+                ctx->systems[system_id].function(ctx, entity_id, delta_time);
             }
         }
     }
