@@ -1,6 +1,5 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
-#include <stdint.h>
 #include <sys/types.h>
 
 #include <cecs.h>
@@ -61,18 +60,45 @@ int init_sdl() {
     return ECS_OK;
 }
 
+#define POINTS_TO_RENDER_COUNT_MAX 32
+static SDL_Point points_to_render[POINTS_TO_RENDER_COUNT_MAX];
+static int points_to_render_count = 0;
+static int add_point_to_render(SDL_Point point) {
+    if (points_to_render_count >= POINTS_TO_RENDER_COUNT_MAX) {
+        return -1;
+    }
+    points_to_render[points_to_render_count] = point;
+    return points_to_render_count++;
+}
+
+void render_sdl() {
+    SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(sdl_renderer);
+
+    SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
+
+    for (int i = 0; i < points_to_render_count; i++) {
+        SDL_RenderDrawRect(sdl_renderer, &(SDL_Rect){
+            .x = points_to_render[i].x,
+            .y = points_to_render[i].y,
+            .w = 10,
+            .h = 10,
+        });
+    }
+    SDL_RenderPresent(sdl_renderer);
+    points_to_render_count = 0; // clear
+}
+
 ECS_DEFINE_SYSTEM(render, position_mask) {
     struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
 
-    SDL_RenderDrawRect(sdl_renderer, &(SDL_Rect){
-        .x = p->x * 10,
+    add_point_to_render((SDL_Point){
+        .x = p->x,
         .y = p->y,
-        .w = 10,
-        .h = 10,
     });
-    SDL_RenderPresent(sdl_renderer);
+}
 
-    sleep(1);
+void handle_sdl_events() {
 }
 
 int main() {
@@ -99,12 +125,19 @@ int main() {
     size_t e1 = ecs_add_entity(&ctx, position_mask | velocity_mask);
 
     ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e0))->x = 1;
+    ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e1))->x = 2;
 
-    ecs_run(&ctx);
-    ecs_run(&ctx);
-    ecs_run(&ctx);
-    ecs_run(&ctx);
-    ecs_run(&ctx);
+    int quit = 0;
+
+    while (!quit) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) quit = 1;
+        }
+        ecs_run(&ctx);
+        render_sdl();
+        usleep(32 * 1000);
+    }
 
     sleep(1);
 
