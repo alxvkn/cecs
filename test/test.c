@@ -79,7 +79,7 @@ int init_sdl() {
     return ECS_OK;
 }
 
-#define POINTS_TO_RENDER_COUNT_MAX 2000
+#define POINTS_TO_RENDER_COUNT_MAX 10000
 static SDL_FPoint points_to_render[POINTS_TO_RENDER_COUNT_MAX];
 static int points_to_render_count = 0;
 static int add_point_to_render(SDL_FPoint point) {
@@ -120,7 +120,7 @@ int main() {
 
     enum ecs_err err = ecs_init(&ctx,
         &(struct ecs_config) {
-            .entities_pool_size = 2000,
+            .entities_pool_size = 10000,
             .systems_pool_size = 8,
             .components_pool_pool_size = 3,
         });
@@ -138,7 +138,7 @@ int main() {
     ecs_register_system(&ctx, &render);
 
     srand(time(0));
-    for (int i = 0; i < 2000; i++) {
+    for (int i = 0; i < 10000; i++) {
         size_t e = ecs_add_entity(&ctx, position_mask | velocity_mask | mass_mask);
         if (e == 0) {
             printf("couldn't create entity at i = %d\n", i);
@@ -151,7 +151,7 @@ int main() {
         ((struct mass*)ecs_get_component(&ctx, mass_mask, e))->mass = 10;
 
         ((struct position*)ecs_get_component(&ctx, position_mask, e))->x = rand() % 799;
-        ((struct position*)ecs_get_component(&ctx, position_mask, e))->y = 200;
+        ((struct position*)ecs_get_component(&ctx, position_mask, e))->y = rand() % 200 + 100;
     }
 
     size_t e0 = ecs_add_entity(&ctx, position_mask | velocity_mask);
@@ -160,12 +160,21 @@ int main() {
     ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e0))->x = 50;
     ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e1))->x = 25;
 
-    int quit = 0;
+    int quit = 0, paused = 0;
 
     while (!quit) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) quit = 1;
+            else if (e.type == SDL_KEYUP) {
+                if (e.key.keysym.sym == ' ') {
+                    paused = !paused;
+                }
+            }
+        }
+
+        if (paused) {
+            ctx.last_run_time = (struct timespec){0};
         }
         ecs_run(&ctx);
         render_sdl();
