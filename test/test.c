@@ -12,12 +12,12 @@
 
 const static ecs_component_mask_t position_mask = 1;
 struct position {
-    int x, y;
+    float x, y;
 };
 
 const static ecs_component_mask_t velocity_mask = 1 << 1;
 struct velocity {
-    int x, y;
+    float x, y;
 };
 
 // SYSTEMS
@@ -27,11 +27,11 @@ ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
     struct velocity* v = (struct velocity*)ecs_get_component(ctx, velocity_mask, entity_id);
 
     printf("movement_system called with p = {\n"
-           "    x = %d\n"
-           "    y = %d\n"
+           "    x = %f\n"
+           "    y = %f\n"
            "} and v = {\n"
-           "    x = %d\n"
-           "    y = %d\n"
+           "    x = %f\n"
+           "    y = %f\n"
            "}\n",
            p->x, p->y, v->x, v->y);
 
@@ -61,9 +61,9 @@ int init_sdl() {
 }
 
 #define POINTS_TO_RENDER_COUNT_MAX 32
-static SDL_Point points_to_render[POINTS_TO_RENDER_COUNT_MAX];
+static SDL_FPoint points_to_render[POINTS_TO_RENDER_COUNT_MAX];
 static int points_to_render_count = 0;
-static int add_point_to_render(SDL_Point point) {
+static int add_point_to_render(SDL_FPoint point) {
     if (points_to_render_count >= POINTS_TO_RENDER_COUNT_MAX) {
         return -1;
     }
@@ -78,7 +78,7 @@ void render_sdl() {
     SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 
     for (int i = 0; i < points_to_render_count; i++) {
-        SDL_RenderDrawRect(sdl_renderer, &(SDL_Rect){
+        SDL_RenderDrawRectF(sdl_renderer, &(SDL_FRect){
             .x = points_to_render[i].x,
             .y = points_to_render[i].y,
             .w = 10,
@@ -92,7 +92,7 @@ void render_sdl() {
 ECS_DEFINE_SYSTEM(render, position_mask) {
     struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
 
-    add_point_to_render((SDL_Point){
+    add_point_to_render((SDL_FPoint){
         .x = p->x,
         .y = p->y,
     });
@@ -136,10 +136,10 @@ int main() {
         }
         ecs_run(&ctx);
         render_sdl();
-        usleep(32 * 1000);
+        usleep((1000 * 1000) / 60);
     }
 
-    sleep(1);
+    SDL_Quit();
 
     if (err)
         puts(ecs_get_error());
