@@ -142,7 +142,7 @@ int main() {
         size_t e = ecs_add_entity(&ctx, position_mask | velocity_mask | mass_mask);
         if (e == 0) {
             printf("couldn't create entity at i = %d\n", i);
-            exit(0);
+            exit(1);
         }
 
         ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e))->y = rand() % 50 - 50;
