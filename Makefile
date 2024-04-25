@@ -37,4 +37,4 @@ run-test: test
 	@echo
 	./test/test
 
-.PHONY: all clean run-test test
+.PHONY: all clean run-test test debug
