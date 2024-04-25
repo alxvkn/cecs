@@ -152,9 +152,13 @@ enum ecs_err ecs_run(struct ecs_ctx *ctx) {
     struct timespec current_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
 
-    double delta_time = (double)(current_time.tv_sec - ctx->last_run_time.tv_sec)
-        + (double)((current_time.tv_nsec - ctx->last_run_time.tv_nsec) / 1000)
-        / 1000 / 1000;
+    double delta_time = 0;
+    if (ctx->last_run_time.tv_sec != 0) {
+        delta_time = (double)(current_time.tv_sec - ctx->last_run_time.tv_sec)
+            + (double)((current_time.tv_nsec - ctx->last_run_time.tv_nsec) / 1000)
+            / 1000 / 1000;
+    }
+
     printf("ecs_run: calculated delta_time is %f\n", delta_time);
 
     ctx->last_run_time = current_time;
