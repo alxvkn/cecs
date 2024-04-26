@@ -3,7 +3,7 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCE))
 
 CFLAGS += $(addprefix -I,$(INCLUDE_DIRS))
 
-LDLIBS = SDL2
+LDLIBS = SDL2 m
 LDFLAGS += $(addprefix -l,$(LDLIBS))
 
 test: $(OBJECTS)

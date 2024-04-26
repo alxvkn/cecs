@@ -7,7 +7,13 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 #include <SDL2/SDL.h>
+
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 800
+
+#define POINTS_COUNT 100000
 
 // COMPONENTS
 
@@ -60,7 +66,7 @@ SDL_Renderer* sdl_renderer = NULL;
 int init_sdl() {
     SDL_Window* window = NULL;
 
-    window = SDL_CreateWindow("hiii", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("hiii", 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
 
     sdl_renderer = SDL_CreateRenderer(
         window,
@@ -76,7 +82,7 @@ int init_sdl() {
     return ECS_OK;
 }
 
-#define POINTS_TO_RENDER_COUNT_MAX 10000
+#define POINTS_TO_RENDER_COUNT_MAX 100000
 static SDL_FPoint points_to_render[POINTS_TO_RENDER_COUNT_MAX];
 static int points_to_render_count = 0;
 static int add_point_to_render(SDL_FPoint point) {
@@ -103,6 +109,18 @@ void render_sdl() {
     points_to_render_count = 0; // clear
 }
 
+SDL_FPoint last_mouse_click;
+
+ECS_DEFINE_SYSTEM(fly_to_mouse, position_mask | velocity_mask) {
+    struct position* p = ECS_GET_COMPONENT(position);
+    struct velocity* v = ECS_GET_COMPONENT(velocity);
+
+    if (!(last_mouse_click.x == 0 && last_mouse_click.y == 0)) {
+        v->x = (last_mouse_click.x - p->x) / 10;
+        v->y = (last_mouse_click.y - p->y) / 10;
+    }
+}
+
 ECS_DEFINE_SYSTEM(render, position_mask) {
     struct position* p = ECS_GET_COMPONENT(position);
 
@@ -117,7 +135,7 @@ int main() {
 
     enum ecs_err err = ecs_init(&ctx,
         &(struct ecs_config) {
-            .entities_pool_size = 10000,
+            .entities_pool_size = POINTS_COUNT,
             .systems_pool_size = 8,
             .components_pool_pool_size = 3,
         });
@@ -128,27 +146,28 @@ int main() {
 
     ecs_register_system(&ctx, &movement);
     // ecs_register_system(&ctx, &debug);
-    ecs_register_system(&ctx, &gravity);
+    // ecs_register_system(&ctx, &gravity);
+    ecs_register_system(&ctx, &fly_to_mouse);
 
     init_sdl();
 
     ecs_register_system(&ctx, &render);
 
     srand(time(0));
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < POINTS_COUNT; i++) {
         size_t e = ecs_add_entity(&ctx, position_mask | velocity_mask | mass_mask);
         if (e == 0) {
             printf("couldn't create entity at i = %d\n", i);
             exit(1);
         }
 
-        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e))->y = rand() % 50 - 50;
-        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e))->x = rand() % 10 - 5;
+        // ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e))->y = rand() % 50 - 50;
+        // ((struct velocity*)ecs_get_component(&ctx, velocity_mask, e))->x = rand() % 10 - 5;
 
         ((struct mass*)ecs_get_component(&ctx, mass_mask, e))->mass = 10;
 
-        ((struct position*)ecs_get_component(&ctx, position_mask, e))->x = rand() % 799;
-        ((struct position*)ecs_get_component(&ctx, position_mask, e))->y = rand() % 200 + 100;
+        ((struct position*)ecs_get_component(&ctx, position_mask, e))->x = WINDOW_WIDTH / 2;
+        ((struct position*)ecs_get_component(&ctx, position_mask, e))->y = WINDOW_HEIGHT / 2;
     }
 
     size_t e0 = ecs_add_entity(&ctx, position_mask | velocity_mask);
@@ -166,7 +185,24 @@ int main() {
             else if (e.type == SDL_KEYUP) {
                 if (e.key.keysym.sym == ' ') {
                     paused = !paused;
+                } else if (e.key.keysym.sym == 'r') {
+                    for (int i = 1; i < (POINTS_COUNT + 1); i++) {
+                        double speed = (double)(rand() % 1000 - 500) / 10;
+                        double x_speed = speed * ((double)(rand() % 2000 - 1000) / 1000);
+
+                        double y_speed = sqrt((speed * speed) - (x_speed * x_speed));
+
+                        if (speed < x_speed) {
+                            y_speed = -y_speed;
+                        }
+
+                        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->x = x_speed;
+                        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->y = y_speed;
+                    }
                 }
+            } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+                last_mouse_click.x = e.button.x;
+                last_mouse_click.y = e.button.y;
             }
         }
 
