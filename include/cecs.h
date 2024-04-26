@@ -84,6 +84,14 @@ enum ecs_err    ecs_run(struct ecs_ctx* ctx);
 
 void*           ecs_get_component(struct ecs_ctx* ctx, ecs_component_mask_t mask, size_t id);
 
+/* meant to be used inside systems, this is why it has hard-coded variable names
+ * for ctx and entity_id */
+#define ECS_GET_COMPONENT(name) (struct name*)ecs_get_component(ctx, name##_mask, entity_id)
+
+#define ECS_DEFINE_COMPONENT(name, mask) \
+const static ecs_component_mask_t name##_mask = mask; \
+struct name 
+
 #define ECS_DEFINE_SYSTEM(name, mask) \
 void name##_system(struct ecs_ctx* ctx, size_t entity_id, double delta_time); /* hack to leave implementation at the end of macro */ \
 struct ecs_system name = (struct ecs_system){ \

@@ -11,26 +11,23 @@
 
 // COMPONENTS
 
-const static ecs_component_mask_t position_mask = 1;
-struct position {
+ECS_DEFINE_COMPONENT(position, 1) {
     float x, y;
 };
 
-const static ecs_component_mask_t velocity_mask = 1 << 1;
-struct velocity {
+ECS_DEFINE_COMPONENT(velocity, 1 << 1) {
     float x, y;
 };
 
-const static ecs_component_mask_t mass_mask = velocity_mask << 1;
-struct mass {
+ECS_DEFINE_COMPONENT(mass, velocity_mask << 1) {
     float mass;
 };
 
 // SYSTEMS
 
 ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
-    struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
-    struct velocity* v = (struct velocity*)ecs_get_component(ctx, velocity_mask, entity_id);
+    struct position* p = ECS_GET_COMPONENT(position);
+    struct velocity* v = ECS_GET_COMPONENT(velocity);
 
     // printf("movement_system called with p = {\n"
     //        "    x = %f\n"
@@ -52,8 +49,8 @@ ECS_DEFINE_SYSTEM(debug, position_mask) {
 }
 
 ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
-    struct velocity* v = (struct velocity*)ecs_get_component(ctx, velocity_mask, entity_id);
-    struct mass* m = (struct mass*)ecs_get_component(ctx, mass_mask, entity_id);
+    struct velocity* v = ECS_GET_COMPONENT(velocity);
+    struct mass* m = ECS_GET_COMPONENT(mass);
 
     v->y += m->mass * delta_time;
 }
@@ -107,7 +104,7 @@ void render_sdl() {
 }
 
 ECS_DEFINE_SYSTEM(render, position_mask) {
-    struct position* p = (struct position*)ecs_get_component(ctx, position_mask, entity_id);
+    struct position* p = ECS_GET_COMPONENT(position);
 
     add_point_to_render((SDL_FPoint){
         .x = p->x,
