@@ -13,7 +13,7 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 800
 
-#define POINTS_COUNT 100000
+#define POINTS_COUNT 50000
 
 // COMPONENTS
 
@@ -44,8 +44,22 @@ ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
     //        "}\n",
     //        p->x, p->y, v->x, v->y);
 
-    p->x += v->x * delta_time;
-    p->y += v->y * delta_time;
+    struct position new = {0};
+
+    new.x = p->x + v->x * delta_time;
+    new.y = p->y + v->y * delta_time;
+
+    if (new.x > WINDOW_WIDTH || new.x < 0) {
+        v->x = v->x / -5;
+        new.x = p->x + v->x * delta_time;
+    }
+
+    if (new.y > WINDOW_HEIGHT || new.y < 0) {
+        v->y = v->y / -5;
+        new.y = p->y + v->y * delta_time;
+    }
+
+    *p = new;
 }
 
 // TODO: allow systems to have zero component mask
@@ -54,11 +68,13 @@ ECS_DEFINE_SYSTEM(debug, position_mask) {
     printf("debug system on entity with id %lu\n", entity_id);
 }
 
+static int run_gravity = 0;
+
 ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
     struct velocity* v = ECS_GET_COMPONENT(velocity);
     struct mass* m = ECS_GET_COMPONENT(mass);
 
-    v->y += m->mass * delta_time;
+    if (run_gravity) v->y += m->mass * delta_time;
 }
 
 SDL_Renderer* sdl_renderer = NULL;
@@ -82,7 +98,7 @@ int init_sdl() {
     return ECS_OK;
 }
 
-#define POINTS_TO_RENDER_COUNT_MAX 100000
+#define POINTS_TO_RENDER_COUNT_MAX 50000
 static SDL_FPoint points_to_render[POINTS_TO_RENDER_COUNT_MAX];
 static int points_to_render_count = 0;
 static int add_point_to_render(SDL_FPoint point) {
@@ -146,8 +162,8 @@ int main() {
 
     ecs_register_system(&ctx, &movement);
     // ecs_register_system(&ctx, &debug);
-    // ecs_register_system(&ctx, &gravity);
-    ecs_register_system(&ctx, &fly_to_mouse);
+    ecs_register_system(&ctx, &gravity);
+    // ecs_register_system(&ctx, &fly_to_mouse);
 
     init_sdl();
 
@@ -199,6 +215,8 @@ int main() {
                         ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->x = x_speed;
                         ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->y = y_speed;
                     }
+                } else if (e.key.keysym.sym == 'g') {
+                    run_gravity = !run_gravity;
                 }
             } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                 last_mouse_click.x = e.button.x;
