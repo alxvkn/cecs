@@ -13,7 +13,7 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 800
 
-#define POINTS_COUNT 50000
+#define POINTS_COUNT 10000
 
 // COMPONENTS
 
@@ -68,7 +68,7 @@ ECS_DEFINE_SYSTEM(debug, position_mask) {
     printf("debug system on entity with id %lu\n", entity_id);
 }
 
-static int run_gravity = 0;
+static int run_gravity = 1;
 
 ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
     struct velocity* v = ECS_GET_COMPONENT(velocity);
@@ -109,7 +109,7 @@ static int add_point_to_render(SDL_FPoint point) {
     return points_to_render_count++;
 }
 
-void render_sdl() {
+void render_points_sdl() {
     SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
     SDL_RenderClear(sdl_renderer);
 
@@ -145,6 +145,23 @@ ECS_DEFINE_SYSTEM(render, position_mask) {
         .y = p->y,
     });
 }
+
+void randomize_velocities(struct ecs_ctx* ctx) {
+    for (int i = 1; i < (POINTS_COUNT + 1); i++) {
+        double speed = (double)(rand() % 1000 - 500) / 10;
+        double x_speed = speed * ((double)(rand() % 2000 - 1000) / 1000);
+
+        double y_speed = sqrt((speed * speed) - (x_speed * x_speed));
+
+        if (speed < x_speed) {
+            y_speed = -y_speed;
+        }
+
+        ((struct velocity*)ecs_get_component(ctx, velocity_mask, i))->x = x_speed;
+        ((struct velocity*)ecs_get_component(ctx, velocity_mask, i))->y = y_speed;
+    }
+}
+
 
 int main() {
     struct ecs_ctx ctx = {0};
@@ -185,6 +202,7 @@ int main() {
         ((struct position*)ecs_get_component(&ctx, position_mask, e))->x = WINDOW_WIDTH / 2;
         ((struct position*)ecs_get_component(&ctx, position_mask, e))->y = WINDOW_HEIGHT / 2;
     }
+    randomize_velocities(&ctx);
 
     size_t e0 = ecs_add_entity(&ctx, position_mask | velocity_mask);
     size_t e1 = ecs_add_entity(&ctx, position_mask | velocity_mask);
@@ -202,21 +220,11 @@ int main() {
                 if (e.key.keysym.sym == ' ') {
                     paused = !paused;
                 } else if (e.key.keysym.sym == 'r') {
-                    for (int i = 1; i < (POINTS_COUNT + 1); i++) {
-                        double speed = (double)(rand() % 1000 - 500) / 10;
-                        double x_speed = speed * ((double)(rand() % 2000 - 1000) / 1000);
-
-                        double y_speed = sqrt((speed * speed) - (x_speed * x_speed));
-
-                        if (speed < x_speed) {
-                            y_speed = -y_speed;
-                        }
-
-                        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->x = x_speed;
-                        ((struct velocity*)ecs_get_component(&ctx, velocity_mask, i))->y = y_speed;
-                    }
+                    randomize_velocities(&ctx);
                 } else if (e.key.keysym.sym == 'g') {
                     run_gravity = !run_gravity;
+                } else if (e.key.keysym.sym == 'q') {
+                    quit = 1;
                 }
             } else if (e.type == SDL_MOUSEBUTTONDOWN) {
                 last_mouse_click.x = e.button.x;
@@ -228,7 +236,7 @@ int main() {
             ctx.last_run_time = (struct timespec){0};
         }
         ecs_run(&ctx);
-        render_sdl();
+        render_points_sdl();
         // usleep((1000 * 1000) / 60);
     }
 
