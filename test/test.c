@@ -10,8 +10,8 @@
 #include <math.h>
 #include <SDL2/SDL.h>
 
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 800
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
 #define POINTS_COUNT 10000
 
@@ -82,7 +82,7 @@ SDL_Renderer* sdl_renderer = NULL;
 int init_sdl() {
     SDL_Window* window = NULL;
 
-    window = SDL_CreateWindow("hiii", 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
+    window = SDL_CreateWindow("hiii", 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
 
     sdl_renderer = SDL_CreateRenderer(
         window,
