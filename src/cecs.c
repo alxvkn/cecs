@@ -16,8 +16,8 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
     memset(ctx, 0, sizeof(*ctx));
 
     ctx->config = *config;
-    ctx->entities = calloc(config->entities_pool_size + 1, sizeof(struct ecs_entity));
-    memset(ctx->entities, 0, (config->entities_pool_size + 1) * sizeof(struct ecs_entity));
+    ctx->entities.pool = calloc(config->entities_pool_size + 1, sizeof(struct ecs_entity));
+    memset(ctx->entities.pool, 0, (config->entities_pool_size + 1) * sizeof(struct ecs_entity));
 
     ctx->systems = calloc(config->systems_pool_size + 1, sizeof(struct ecs_system));
     memset(ctx->systems, 0, (config->systems_pool_size + 1) * sizeof(struct ecs_system));
@@ -25,12 +25,14 @@ enum ecs_err ecs_init(struct ecs_ctx* ctx, struct ecs_config* config) {
     ctx->components.pools = calloc(config->components_pool_pool_size, sizeof(struct ecs_component_pool));
     memset(ctx->components.pools, 0, config->components_pool_pool_size * sizeof(struct ecs_component_pool));
 
+    ctx->entities.count = 1;
+
     return ECS_OK;
 }
 
 void ecs_cleanup(struct ecs_ctx* ctx) {
-    if (ctx->entities != NULL)
-        free(ctx->entities);
+    if (ctx->entities.pool != NULL)
+        free(ctx->entities.pool);
 
     if (ctx->systems != NULL)
         free(ctx->systems);
@@ -39,7 +41,7 @@ void ecs_cleanup(struct ecs_ctx* ctx) {
         free(ctx->components.pools);
 }
 
-size_t ecs_get_free_system_id(struct ecs_ctx* ctx) {
+size_t ecs_new_system_id(struct ecs_ctx* ctx) {
     for (size_t i = 1; i <= ctx->config.systems_pool_size; i++) {
         // systems that don't depend on components considered invalid
         // NOTE: test/test.c:44
@@ -56,7 +58,7 @@ size_t ecs_get_free_system_id(struct ecs_ctx* ctx) {
 
 size_t ecs_register_system(struct ecs_ctx* ctx, struct ecs_system* system) {
 
-    size_t id = ecs_get_free_system_id(ctx);
+    size_t id = ecs_new_system_id(ctx);
     if (id > 0) {
         DBGMSG("%s: registering system\n", __func__);
         ctx->systems[id] = *system;
@@ -69,11 +71,16 @@ void ecs_remove_system(struct ecs_ctx* ctx, size_t id) {
     ctx->systems[id].component_mask = 0;
 }
 
-size_t ecs_get_free_entity_id(struct ecs_ctx* ctx) {
+size_t ecs_new_entity_id(struct ecs_ctx* ctx) {
+    // first try naive approach
+    if (ctx->entities.count < ctx->config.entities_pool_size) {
+        // DBGMSG("%s: returning and incrementing count=%zu as entity_id\n", __func__, ctx->entities.count);
+        return ctx->entities.count++;
+    }
     // not using 0'th index so we can treat 0 as an error
     for (size_t i = 1; i <= ctx->config.entities_pool_size; i++) {
         // entities with no components considered invalid
-        if (ctx->entities[i].component_mask == 0)
+        if (ctx->entities.pool[i].component_mask == 0)
             return i;
     }
     ecs_set_error("failed to get free entity id, propably no space in pool left\n");
@@ -81,9 +88,9 @@ size_t ecs_get_free_entity_id(struct ecs_ctx* ctx) {
 }
 
 size_t ecs_add_entity(struct ecs_ctx* ctx, ecs_component_mask_t component_mask) {
-    size_t id = ecs_get_free_entity_id(ctx);
+    size_t id = ecs_new_entity_id(ctx);
     if (id > 0) {
-        ctx->entities[id].component_mask = component_mask;
+        ctx->entities.pool[id].component_mask = component_mask;
     }
     return id;
 }
@@ -145,7 +152,7 @@ void* ecs_get_component(struct ecs_ctx* ctx, ecs_component_mask_t mask, size_t i
 }
 
 void ecs_remove_entity(struct ecs_ctx* ctx, size_t id) {
-    ctx->entities[id].component_mask = 0;
+    ctx->entities.pool[id].component_mask = 0;
 }
 
 enum ecs_err ecs_run(struct ecs_ctx *ctx) {
@@ -169,9 +176,9 @@ enum ecs_err ecs_run(struct ecs_ctx *ctx) {
 
         for (size_t entity_id = 1; entity_id <= ctx->config.entities_pool_size; entity_id++) {
             // invalid entity
-            if (ctx->entities[entity_id].component_mask == 0) continue;
+            if (ctx->entities.pool[entity_id].component_mask == 0) continue;
 
-            if (ctx->systems[system_id].component_mask & ctx->entities[entity_id].component_mask) {
+            if (ctx->systems[system_id].component_mask & ctx->entities.pool[entity_id].component_mask) {
                 ctx->systems[system_id].function(ctx, entity_id, delta_time);
             }
         }

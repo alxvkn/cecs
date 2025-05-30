@@ -51,7 +51,10 @@ struct ecs_config {
 struct ecs_ctx {
     struct ecs_config config;
 
-    struct ecs_entity* entities;
+    struct {
+        struct ecs_entity* pool;
+        size_t count;
+    } entities;
 
     struct timespec last_run_time;
 

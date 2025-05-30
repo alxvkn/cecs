@@ -13,7 +13,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define POINTS_COUNT 10000
+#define POINTS_COUNT 100000
 
 // COMPONENTS
 
@@ -25,13 +25,27 @@ ECS_DEFINE_COMPONENT(velocity, 1 << 1) {
     float x, y;
 };
 
-ECS_DEFINE_COMPONENT(mass, velocity_mask << 1) {
+ECS_DEFINE_COMPONENT(acceleration, velocity_mask << 1) {
+    float x, y;
+};
+
+ECS_DEFINE_COMPONENT(mass, acceleration_mask << 1) {
     float mass;
 };
 
 // SYSTEMS
 
-ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
+ECS_DEFINE_SYSTEM(velocity_update, velocity_mask | acceleration_mask) {
+    struct velocity* v = ECS_GET_COMPONENT(velocity);
+    struct acceleration* a = ECS_GET_COMPONENT(acceleration);
+
+    struct velocity new_v = {0};
+
+    v->x += a->x * delta_time;
+    v->y += a->y * delta_time;
+}
+
+ECS_DEFINE_SYSTEM(movement, position_mask | velocity_mask) {
     struct position* p = ECS_GET_COMPONENT(position);
     struct velocity* v = ECS_GET_COMPONENT(velocity);
 
@@ -44,22 +58,35 @@ ECS_DEFINE_SYSTEM(movement , position_mask | velocity_mask) {
     //        "}\n",
     //        p->x, p->y, v->x, v->y);
 
-    struct position new = {0};
+    struct position new_p = {0};
 
-    new.x = p->x + v->x * delta_time;
-    new.y = p->y + v->y * delta_time;
+    new_p.x = p->x + v->x * delta_time;
+    new_p.y = p->y + v->y * delta_time;
 
-    if (new.x > WINDOW_WIDTH || new.x < 0) {
-        v->x = v->x / -5;
-        new.x = p->x + v->x * delta_time;
+    // if (new_p.x > WINDOW_WIDTH || new_p.x < 0) {
+    //     v->x = v->x / -5;
+    //     new_p.x = p->x + v->x * delta_time;
+    // }
+    //
+    // if (new_p.y > WINDOW_HEIGHT || new_p.y < 0) {
+    //     v->y = v->y / -5;
+    //     new_p.y = p->y + v->y * delta_time;
+    // }
+
+    *p = new_p;
+}
+
+ECS_DEFINE_SYSTEM(bounce_from_bounds, position_mask | velocity_mask) {
+    struct position* p = ECS_GET_COMPONENT(position);
+    struct velocity* v = ECS_GET_COMPONENT(velocity);
+
+    if (p->x > WINDOW_WIDTH || p->x < 0) {
+        v->x = -v->x;
     }
 
-    if (new.y > WINDOW_HEIGHT || new.y < 0) {
-        v->y = v->y / -5;
-        new.y = p->y + v->y * delta_time;
+    if (p->y > WINDOW_HEIGHT || p->y < 0) {
+        v->y = -v->y;
     }
-
-    *p = new;
 }
 
 // TODO: allow systems to have zero component mask
@@ -71,10 +98,11 @@ ECS_DEFINE_SYSTEM(debug, position_mask) {
 static int run_gravity = 1;
 
 ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
-    struct velocity* v = ECS_GET_COMPONENT(velocity);
+    const float g = 2;
+    struct acceleration* a = ECS_GET_COMPONENT(acceleration);
     struct mass* m = ECS_GET_COMPONENT(mass);
 
-    if (run_gravity) v->y += m->mass * delta_time;
+    if (run_gravity) a->y += g * m->mass * delta_time;
 }
 
 SDL_Renderer* sdl_renderer = NULL;
@@ -82,7 +110,14 @@ SDL_Renderer* sdl_renderer = NULL;
 int init_sdl() {
     SDL_Window* window = NULL;
 
-    window = SDL_CreateWindow("hiii", 100, 100, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow(
+        "hiii",
+        100,
+        100,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
+        SDL_WINDOW_SHOWN
+    );
 
     sdl_renderer = SDL_CreateRenderer(
         window,
@@ -157,6 +192,8 @@ void randomize_velocities(struct ecs_ctx* ctx) {
             y_speed = -y_speed;
         }
 
+        ((struct velocity*)ecs_get_component(ctx, acceleration_mask, i))->x = 0;
+        ((struct velocity*)ecs_get_component(ctx, acceleration_mask, i))->y = 0;
         ((struct velocity*)ecs_get_component(ctx, velocity_mask, i))->x = x_speed;
         ((struct velocity*)ecs_get_component(ctx, velocity_mask, i))->y = y_speed;
     }
@@ -167,19 +204,22 @@ int main() {
     struct ecs_ctx ctx = {0};
 
     enum ecs_err err = ecs_init(&ctx,
-        &(struct ecs_config) {
-            .entities_pool_size = POINTS_COUNT,
-            .systems_pool_size = 8,
-            .components_pool_pool_size = 3,
-        });
+                                &(struct ecs_config) {
+                                .entities_pool_size = POINTS_COUNT,
+                                .systems_pool_size = 8,
+                                .components_pool_pool_size = 4,
+                                });
 
     ecs_register_component(&ctx, position_mask, sizeof(struct position));
     ecs_register_component(&ctx, velocity_mask, sizeof(struct velocity));
+    ecs_register_component(&ctx, acceleration_mask, sizeof(struct acceleration));
     ecs_register_component(&ctx, mass_mask, sizeof(struct mass));
 
+    ecs_register_system(&ctx, &velocity_update);
     ecs_register_system(&ctx, &movement);
-    // ecs_register_system(&ctx, &debug);
+    ecs_register_system(&ctx, &bounce_from_bounds);
     ecs_register_system(&ctx, &gravity);
+    // ecs_register_system(&ctx, &debug);
     // ecs_register_system(&ctx, &fly_to_mouse);
 
     init_sdl();
