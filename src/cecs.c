@@ -73,9 +73,15 @@ void ecs_remove_system(struct ecs_ctx* ctx, size_t id) {
 
 size_t ecs_new_entity_id(struct ecs_ctx* ctx) {
     // first try naive approach
+    // this will speed up creating a bunch of entities at the start,
+    // when no entities were yet deleted and the pool is continuous.
+    //
+    // however the effects of this on performance after the pool becomes
+    // non-continuous have to be studied
     if (ctx->entities.count < ctx->config.entities_pool_size) {
         // DBGMSG("%s: returning and incrementing count=%zu as entity_id\n", __func__, ctx->entities.count);
-        return ctx->entities.count++;
+        if (ctx->entities.pool[ctx->entities.count].component_mask == 0)
+            return ctx->entities.count++;
     }
     // not using 0'th index so we can treat 0 as an error
     for (size_t i = 1; i <= ctx->config.entities_pool_size; i++) {
