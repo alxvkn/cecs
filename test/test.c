@@ -1,5 +1,10 @@
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_video.h>
+#include <SDL3/SDL_blendmode.h>
+#include <SDL3/SDL_camera.h>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_stdinc.h>
+#include <SDL3/SDL_video.h>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -8,7 +13,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -98,7 +104,7 @@ ECS_DEFINE_SYSTEM(debug, position_mask) {
 static int run_gravity = 1;
 
 ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
-    const float g = 2;
+    const float g = 9.8;
     struct acceleration* a = ECS_GET_COMPONENT(acceleration);
     struct mass* m = ECS_GET_COMPONENT(mass);
 
@@ -106,24 +112,48 @@ ECS_DEFINE_SYSTEM(gravity, velocity_mask | mass_mask) {
 }
 
 SDL_Renderer* sdl_renderer = NULL;
+SDL_Camera* sdl_camera = NULL;
+TTF_Font* sdl_font = NULL;
 
 int init_sdl() {
     SDL_Window* window = NULL;
 
     window = SDL_CreateWindow(
         "hiii",
-        100,
-        100,
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
-        SDL_WINDOW_SHOWN
+        0
     );
 
     sdl_renderer = SDL_CreateRenderer(
         window,
-        -1,
-        SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED
+        NULL
     );
+
+    SDL_Init(SDL_INIT_CAMERA);
+
+    SDL_CameraID* devices = NULL;
+    int devices_count = 0;
+    devices = SDL_GetCameras(&devices_count);
+
+    if (devices_count == 0) {
+        SDL_Log("couldn't find cameras: %s", SDL_GetError());
+        SDL_Quit();
+    }
+
+    sdl_camera = SDL_OpenCamera(devices[0], NULL);
+    if (!sdl_camera) {
+        SDL_Log("couldn't open camera: %s", SDL_GetError());
+        SDL_Quit();
+    }
+
+    SDL_free(devices);
+
+    TTF_Init();
+
+    sdl_font = TTF_OpenFont("/usr/share/fonts/liberation/LiberationSerif-Regular.ttf", 50);
+    // TTF_Font* emojis = TTF_OpenFont("/usr/share/fonts/joypixels/JoyPixels.ttf", 50);
+    // TTF_AddFallbackFont(sdl_font, emojis);
 
     SDL_ShowWindow(window);
     SDL_RenderClear(sdl_renderer);
@@ -144,20 +174,58 @@ static int add_point_to_render(SDL_FPoint point) {
     return points_to_render_count++;
 }
 
-void render_points_sdl() {
-    SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
-    SDL_RenderClear(sdl_renderer);
+void render_text_sdl(TTF_Font* font, const char* text, size_t length) {
+    const static SDL_Color white = { 255, 255, 255 };
+    const static SDL_Color grey = { 127, 127, 127 };
+    SDL_Surface* surface = TTF_RenderText_Shaded(font, text, length, white, grey);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(sdl_renderer, surface);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_ADD);
 
+    SDL_FRect rect;
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = 300;
+    rect.h = 50;
+
+    SDL_RenderTexture(sdl_renderer, texture, NULL, &rect);
+
+    SDL_DestroySurface(surface);
+    SDL_DestroyTexture(texture);
+}
+
+void render_points_sdl() {
     SDL_SetRenderDrawColor(sdl_renderer, 255, 255, 255, 255);
 
-    SDL_RenderDrawPointsF(
+    SDL_RenderPoints(
         sdl_renderer,
         points_to_render,
         points_to_render_count
     );
 
-    SDL_RenderPresent(sdl_renderer);
     points_to_render_count = 0; // clear
+}
+
+void render_camera_sdl() {
+    static SDL_Texture* texture = NULL;
+
+    Uint64 timestamp = 0;
+    SDL_Surface* frame = SDL_AcquireCameraFrame(sdl_camera, &timestamp);
+
+    if (frame != NULL) {
+        if (!texture) {
+            texture = SDL_CreateTexture(sdl_renderer, frame->format, SDL_TEXTUREACCESS_STREAMING, frame->w, frame->h);
+        }
+
+        if (texture) {
+            SDL_UpdateTexture(texture, NULL, frame->pixels, frame->pitch);
+        }
+    }
+
+    SDL_ReleaseCameraFrame(sdl_camera, frame);
+
+    if (texture) {
+        SDL_RenderTexture(sdl_renderer, texture, NULL, NULL);
+    }
 }
 
 SDL_FPoint last_mouse_click;
@@ -255,18 +323,18 @@ int main() {
     while (!quit) {
         SDL_Event e;
         while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) quit = 1;
-            else if (e.type == SDL_KEYUP) {
-                if (e.key.keysym.sym == ' ') {
+            if (e.type == SDL_EVENT_QUIT) quit = 1;
+            else if (e.type == SDL_EVENT_KEY_UP) {
+                if (e.key.key == ' ') {
                     paused = !paused;
-                } else if (e.key.keysym.sym == 'r') {
+                } else if (e.key.key == 'r') {
                     randomize_velocities(&ctx);
-                } else if (e.key.keysym.sym == 'g') {
+                } else if (e.key.key == 'g') {
                     run_gravity = !run_gravity;
-                } else if (e.key.keysym.sym == 'q') {
+                } else if (e.key.key == 'q') {
                     quit = 1;
                 }
-            } else if (e.type == SDL_MOUSEBUTTONDOWN) {
+            } else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
                 last_mouse_click.x = e.button.x;
                 last_mouse_click.y = e.button.y;
             }
@@ -275,8 +343,19 @@ int main() {
         if (paused) {
             ctx.last_run_time = (struct timespec){0};
         }
-        ecs_run(&ctx);
+        double delta_time = ecs_run(&ctx);
+        const static size_t delta_time_string_capacity = 128;
+        char delta_time_string[delta_time_string_capacity];
+        const size_t delta_time_string_size = snprintf(delta_time_string, delta_time_string_capacity, "%f Δt", delta_time);
+
+        SDL_SetRenderDrawColor(sdl_renderer, 0, 0, 0, 255);
+        SDL_RenderClear(sdl_renderer);
+
+        render_camera_sdl();
         render_points_sdl();
+        render_text_sdl(sdl_font, delta_time_string, delta_time_string_size);
+
+        SDL_RenderPresent(sdl_renderer);
         // usleep((1000 * 1000) / 60);
     }
 

@@ -161,7 +161,7 @@ void ecs_remove_entity(struct ecs_ctx* ctx, size_t id) {
     ctx->entities.pool[id].component_mask = 0;
 }
 
-enum ecs_err ecs_run(struct ecs_ctx *ctx) {
+double ecs_run(struct ecs_ctx *ctx) {
     struct timespec current_time;
     clock_gettime(CLOCK_MONOTONIC_RAW, &current_time);
 
@@ -172,7 +172,7 @@ enum ecs_err ecs_run(struct ecs_ctx *ctx) {
             / 1000 / 1000;
     }
 
-    printf("ecs_run: calculated delta_time is %f\n", delta_time);
+    // printf("ecs_run: calculated delta_time is %f\n", delta_time);
 
     ctx->last_run_time = current_time;
 
@@ -189,5 +189,5 @@ enum ecs_err ecs_run(struct ecs_ctx *ctx) {
             }
         }
     }
-    return ECS_OK;
+    return delta_time;
 }

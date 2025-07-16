@@ -83,7 +83,7 @@ enum ecs_err    ecs_remove_component(struct ecs_ctx* ctx, ecs_component_mask_t m
 
 size_t          ecs_add_entity(struct ecs_ctx* ctx, ecs_component_mask_t component_mask);
 
-enum ecs_err    ecs_run(struct ecs_ctx* ctx);
+double          ecs_run(struct ecs_ctx* ctx);
 
 void*           ecs_get_component(struct ecs_ctx* ctx, ecs_component_mask_t mask, size_t id);
 
